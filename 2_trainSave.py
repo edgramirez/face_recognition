@@ -37,5 +37,3 @@ def encode_known_faces(known_faces_path):
 
 #encode_known_images("/home/edgar/github/face_recognition/EDGAR/known_faces/obama")
 encode_known_faces("/home/edgar/github/face_recognition/EDGAR/known_faces/obamas_people")
-
-
