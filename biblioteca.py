@@ -1,13 +1,14 @@
+import face_recognition
 import pickle
 import os
 import cv2
-from os import walk
-import face_recognition
+from os import walk, path
 
 
 Encodings = []
 Names = []
 font = cv2.FONT_HERSHEY_SIMPLEX
+face_title = 'desconocido'
 #print(cv2.__version__)
 
 
@@ -31,8 +32,8 @@ def compare_pickle_against_unknown(pickle_file, image_dir):
     names_encodings = read_pickle(pickle_file)
     Names = names_encodings[0]
     Encodings = names_encodings[1]
-
     files, root = read_images_in_dir(image_dir)
+
     for file_name in files:
         testImagePath = os.path.join(root, file_name)
         testImage = face_recognition.load_image_file(testImagePath)
@@ -46,15 +47,14 @@ def compare_pickle_against_unknown(pickle_file, image_dir):
             allEncodings = face_recognition.face_encodings(testImage, face_locations)
 
             for (top, right, bottom, left), face_encoding in zip(face_locations, allEncodings):
-                name = 'desconocido'
                 matches = face_recognition.compare_faces(Encodings, face_encoding)
 
                 if True in matches:
                     first_match_index = matches.index(True)
-                    name = Names[first_match_index]
+                    face_title = Names[first_match_index]
 
                 cv2.rectangle(testImage, (left, top),(right, bottom),(0, 0, 255), 2)
-                cv2.putText(testImage, name, (left, top-6), font, .75, (180, 51, 225), 2)
+                cv2.putText(testImage, face_title, (left, top-6), font, .75, (180, 51, 225), 2)
 
             cv2.imshow('Imagen',testImage)
             cv2.moveWindow('Imagen', 0 ,0)
@@ -64,4 +64,30 @@ def compare_pickle_against_unknown(pickle_file, image_dir):
         else:
             print("Image to search does not contains faces")
             print(testImagePath)
+
+
+def encode_known_faces(known_faces_path):
+    files, root = read_images_in_dir(known_faces_path)
+
+    for file_name in files:
+        path = root + '/' + file_name
+        name = os.path.splitext(file_name)[0]
+
+        # load the image into face_recognition library
+        person = face_recognition.load_image_file(path)
+
+        # try to get the location of the face if there is one 
+        face_locations = face_recognition.face_locations(person)
+
+        # if got a face, loads the image, else ignores it
+        if face_locations:
+            encoding = face_recognition.face_encodings(person)[0]
+            Encodings.append(encoding)
+            Names.append(name)
+
+    if Names:
+        print(Names)
+        write_to_pickle(Names, Encodings)
+    else:
+        print('Ningun archivo de imagen contine rostros')
 
